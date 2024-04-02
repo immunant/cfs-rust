@@ -84,7 +84,7 @@ cargo new ${rust_dir}
     mv ../${rust_dir}.old/rust-toolchain.toml .
     mv ../${rust_dir}.old/src/${binary_name}.rs src/main.rs
     mv ../${rust_dir}.old/src/main.rs.diff src/main.rs.diff
-    
+
     rm -rf ../${rust_dir}.old
     
     sed -i 's/channel = "nightly-2022-08-08"/channel = "nightly-2024-04-01"/' rust-toolchain.toml
@@ -95,6 +95,8 @@ cargo new ${rust_dir}
         "#![allow(unused_variables)]"
         "#![allow(unused_unsafe)]"
         "#![allow(static_mut_refs)]"
+        "#![allow(path_statements)]"
+        "#![allow(unused_must_use)]"
 
         # "use c2rust_bitfields::BitfieldStruct;" # not used
         # "use memoffset::offset_of;" # replaced by `core::mem::offset_of`

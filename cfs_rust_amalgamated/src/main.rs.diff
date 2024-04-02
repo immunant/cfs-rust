@@ -1,8 +1,8 @@
 diff --git a/cfs_rust_amalgamated/src/main.rs b/cfs_rust_amalgamated/src/main.rs
-index 567fddb..e3ffbe8 100644
+index 464f673..d111cd0 100644
 --- a/cfs_rust_amalgamated/src/main.rs
 +++ b/cfs_rust_amalgamated/src/main.rs
-@@ -17291,7 +17291,7 @@ pub unsafe extern "C" fn UT_DefaultStubImplWithArgs(
+@@ -17294,7 +17294,7 @@ pub unsafe extern "C" fn UT_DefaultStubImplWithArgs(
                  LocalContext.Int32StatusCode,
                  Counter,
                  &mut LocalContext,
@@ -11,7 +11,7 @@ index 567fddb..e3ffbe8 100644
              );
          } else {
              LocalContext.Int32StatusCode = ((*StubPtr).Data.Cb.Ptr.SimpleHook)
-@@ -17314,7 +17314,7 @@ pub unsafe extern "C" fn UT_DefaultStubImplWithArgs(
+@@ -17317,7 +17317,7 @@ pub unsafe extern "C" fn UT_DefaultStubImplWithArgs(
                  (*StubPtr).Data.Cb.CallbackArg,
                  FuncKey,
                  &mut LocalContext,
@@ -20,3 +20,26 @@ index 567fddb..e3ffbe8 100644
              );
          } else {
              ((*StubPtr).Data.Cb.Ptr.SimpleHandler).expect("non-null function pointer")(
+@@ -29945,7 +29945,7 @@ pub unsafe extern "C" fn CFE_ES_PoolCreateEx(
+     if Status != 0 as libc::c_int {
+         return Status;
+     }
+-    Alignment = &mut (*(0 as *mut C2RustUnnamed_25)).Align as *mut CFE_ES_PoolAlign_t as cpuaddr;
++    Alignment = core::mem::align_of::<CFE_ES_PoolAlign_t>() as _;
+     if Alignment < 4 as libc::c_int as libc::c_ulong {
+         Alignment = 4 as libc::c_int as size_t;
+     }
+@@ -50800,10 +50800,9 @@ pub unsafe extern "C" fn CFE_PSP_ExceptionSigHandler(
+             ((*Buffer).context_info.bt_addrs).as_mut_ptr(),
+             16 as libc::c_int,
+         );
+-        (*Buffer).context_size = offset_of!(
+-            CFE_PSP_Exception_ContextDataEntry_t,
+-            bt_addrs[NumAddrs as usize]
+-        ) as libc::c_ulong as uint32;
++        (*Buffer).context_size = (offset_of!(CFE_PSP_Exception_ContextDataEntry_t, bt_addrs)
++            + ::core::mem::size_of::<*mut libc::c_void>() * NumAddrs as usize)
++            as libc::c_ulong as uint32;
+         (*Buffer).sys_task_id = pthread_self();
+         CFE_PSP_Exception_WriteComplete();
+     }
