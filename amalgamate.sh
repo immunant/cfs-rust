@@ -83,6 +83,9 @@ cargo new ${rust_dir}
     mv ../${rust_dir}.old/build.rs .
     mv ../${rust_dir}.old/rust-toolchain.toml .
     mv ../${rust_dir}.old/src/${binary_name}.rs src/main.rs
+    mv ../${rust_dir}.old/src/main.rs.diff src/main.rs.diff
+    
+    rm -rf ../${rust_dir}.old
     
     sed -i 's/channel = "nightly-2022-08-08"/channel = "nightly-2024-04-01"/' rust-toolchain.toml
     sed -i 's/#\[macro_use\]//g' src/main.rs
@@ -99,12 +102,12 @@ cargo new ${rust_dir}
         # "use ::f128;"
     )
     sed -i "s/use ::${name}_rust_amalgamated::\*;/${lines[*]}/" src/main.rs
-
-    sed -i -E "s/(ArgList\.as_va_list\(\))/core::mem::transmute(\1)/" src/main.rs
-    sed -i -E "s/(ArgListCopy\.as_va_list\(\))/core::mem::transmute(\1)/" src/main.rs
     
     cargo fmt
-    rm -rf ../${rust_dir}.old
+
+    git apply src/main.rs.diff
+
+    cargo fmt
     cargo build
     cargo fix --allow-dirty --allow-staged
 )

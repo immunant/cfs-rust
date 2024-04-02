@@ -1,0 +1,22 @@
+diff --git a/cfs_rust_amalgamated/src/main.rs b/cfs_rust_amalgamated/src/main.rs
+index 567fddb..e3ffbe8 100644
+--- a/cfs_rust_amalgamated/src/main.rs
++++ b/cfs_rust_amalgamated/src/main.rs
+@@ -17291,7 +17291,7 @@ pub unsafe extern "C" fn UT_DefaultStubImplWithArgs(
+                 LocalContext.Int32StatusCode,
+                 Counter,
+                 &mut LocalContext,
+-                ArgListCopy.as_va_list(),
++                core::mem::transmute(ArgListCopy.as_va_list()),
+             );
+         } else {
+             LocalContext.Int32StatusCode = ((*StubPtr).Data.Cb.Ptr.SimpleHook)
+@@ -17314,7 +17314,7 @@ pub unsafe extern "C" fn UT_DefaultStubImplWithArgs(
+                 (*StubPtr).Data.Cb.CallbackArg,
+                 FuncKey,
+                 &mut LocalContext,
+-                ArgList.as_va_list(),
++                core::mem::transmute(ArgList.as_va_list()),
+             );
+         } else {
+             ((*StubPtr).Data.Cb.Ptr.SimpleHandler).expect("non-null function pointer")(
