@@ -80,7 +80,7 @@ cargo new ${rust_dir}
     cargo add memoffset
     cargo add f128
 
-    mv ../${rust_dir}.old/build.rs .
+    # mv ../${rust_dir}.old/build.rs . # Don't need it.
     mv ../${rust_dir}.old/rust-toolchain.toml .
     mv ../${rust_dir}.old/src/${binary_name}.rs src/main.rs
     mv ../${rust_dir}.old/src/main.rs.diff src/main.rs.diff
