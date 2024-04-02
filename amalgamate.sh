@@ -35,26 +35,32 @@ amalgamated_dir="amalgamated"
 errors_log_path=${amalgamated_dir}/errors.log
 files_with_errors_path=${amalgamated_dir}/files_with_errors.txt
 
-mkdir -p "${amalgamated_dir}"
+rm -rf ${amalgamated_dir}
+mkdir ${amalgamated_dir}
 
-# skip files with errors
-rm -f ${errors_log_path} ${files_with_errors_path}
-touch ${errors_log_path} ${files_with_errors_path}
+# ./amalgamate.mjs cfs | \
+#     ("${SHELL}" -euox pipefail || true) \
+#     |& rg 'error: redefinition of ‘([^’]*)’' --only-matching --replace '$1' \
+#     > ${amalgamated_dir}/redefined_identifiers.txt
 
-# Do a fixpoint loop until we get to 0 errors.
-# gcc does this in 1-2 iterations, clang takes forever.
-while : ; do
-    prev_num_files_with_errors=$(wc -l < ${files_with_errors_path})
-    ./amalgamate.mjs cfs | ("${SHELL}" -euox pipefail || true) &>> ${errors_log_path}
-    rg '([^:]+):[0-9]+:[0-9]+:' --only-matching --replace '$1' < ${errors_log_path} > ${files_with_errors_path}
-    num_files_with_errors=$(wc -l < ${files_with_errors_path})
-    if [[ ${num_files_with_errors} -eq ${prev_num_files_with_errors} ]]; then
-        break
-    fi
-done
+# # skip files with errors
+# rm -f ${errors_log_path} ${files_with_errors_path}
+# touch ${errors_log_path} ${files_with_errors_path}
+
+# # Do a fixpoint loop until we get to 0 errors.
+# # gcc does this in 1-2 iterations, clang takes forever.
+# while : ; do
+#     prev_num_files_with_errors=$(wc -l < ${files_with_errors_path})
+#     ./amalgamate.mjs cfs | ("${SHELL}" -euox pipefail || true) &>> ${errors_log_path}
+#     rg '([^:]+):[0-9]+:[0-9]+:' --only-matching --replace '$1' < ${errors_log_path} > ${files_with_errors_path}
+#     num_files_with_errors=$(wc -l < ${files_with_errors_path})
+#     if [[ ${num_files_with_errors} -eq ${prev_num_files_with_errors} ]]; then
+#         break
+#     fi
+# done
 
 # all errors should be gone now; we reached a fixpoint of 0 new errors above
-echo skipped all errors
+# echo skipped all errors
 ./amalgamate.mjs ${name} | "${SHELL}" -euox pipefail
 
 # binary_name=${name}_amalgamated
