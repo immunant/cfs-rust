@@ -7,23 +7,31 @@ import * as pathLib from "path";
 const argv = process.argv.slice(2);
 const name = argv[0];
 
-const filesWithErrors = new Set((await fsp.readFile("files_with_errors.txt"))
+const directory = process.cwd();
+
+const amalgamatedDir = "./amalgamated/";
+
+await fsp.mkdir(amalgamatedDir, { recursive: true });
+
+function amalgamatedPath(fileNameOrExtension) {
+    const fileName = fileNameOrExtension.startsWith(".") ? `${name}${fileNameOrExtension}` : fileNameOrExtension;
+    return pathLib.resolve(`${amalgamatedDir}/${fileName}`);
+}
+
+const filesWithErrorsPath = amalgamatedPath("files_with_errors.txt");
+const filesWithErrors = new Set((await fsp.readFile(filesWithErrorsPath))
     .toString()
     .split("\n")
     .filter(Boolean)
     .map(path => pathLib.relative(".", path))
 );
 console.warn(`skipping ${filesWithErrors.size} files with errors`);
-await fsp.writeFile("files_with_errors.txt", [...filesWithErrors].join("\n"));
+await fsp.writeFile(filesWithErrorsPath, [...filesWithErrors].join("\n"));
 
 const flagsClangDoesntKnow = new Set([
     // "-Wno-format-truncation",
     // "-Wno-stringop-truncation",
 ]);
-
-function amalgamatedPath(extension) {
-    return pathLib.resolve(`${name}.amalgamated.${extension}`);
-}
 
 const commands = JSON.parse((await fsp.readFile("compile_commands.json")).toString())
     .map(({ directory, file, output, command, arguments: args }) => {
@@ -106,6 +114,7 @@ const flags = [
     ...commonDefines,
     // "-ferror-limit=0",
     "-Wno-unknown-warning-option",
+    `-I${directory}`,
 ];
 
 commands.forEach(cmd => {
@@ -130,11 +139,6 @@ const includes = [
     + "\n"
     ;
 
-// const directories = [...new Set(commands.map(e => e.directory))];
-// assert.equal(directories.length, 1);
-// const directory = directories[0];
-const directory = process.cwd();
-
 const linkFlags = [];
 
 const cc = process.env.CC ?? "cc";
@@ -143,25 +147,25 @@ const amalgamated = {
     ii: {
         // A post-preprocessing file, just to check exactly what's included or not.
         directory,
-        arguments: [cc, ...flags, "-o", amalgamatedPath("ii"), "-E", amalgamatedPath("c")],
-        file: amalgamatedPath("c"),
+        arguments: [cc, ...flags, "-o", amalgamatedPath(".ii"), "-E", amalgamatedPath(".c")],
+        file: amalgamatedPath(".c"),
     },
     o: {
         directory,
-        arguments: [cc, ...flags, "-o", amalgamatedPath("o"), "-c", amalgamatedPath("c")],
-        file: amalgamatedPath("c"),
+        arguments: [cc, ...flags, "-o", amalgamatedPath(".o"), "-c", amalgamatedPath(".c")],
+        file: amalgamatedPath(".c"),
     },
     exe: {
         directory,
         arguments: [cc, ...flags, "-o", amalgamatedPath("exe"), amalgamatedPath("c"), ...linkFlags],
-        file: amalgamatedPath("c"),
+        file: amalgamatedPath(".c"),
     },
 };
 
 const amalgamatedCommands = [amalgamated.o];
 
-await fsp.writeFile(amalgamatedPath("c"), includes);
-await fsp.writeFile("amalgamated.compile_commands.json", JSON.stringify(amalgamatedCommands, null, 4));
+await fsp.writeFile(amalgamatedPath(".c"), includes);
+await fsp.writeFile(amalgamatedPath("compile_commands.json"), JSON.stringify(amalgamatedCommands, null, 4));
 
 function toShellCommand(cmd) {
     const command = cmd.arguments && cmd.arguments.join(" ") || cmd.command;

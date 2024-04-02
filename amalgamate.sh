@@ -6,7 +6,7 @@ name=cfs
 
 rust_dir=${name}_rust_amalgamated
 
-export CC=clang
+# export CC=clang
 
 create-compile-commands() {
     cp cfe/cmake/Makefile.sample Makefile
@@ -31,17 +31,23 @@ create-compile-commands
 
 make # creates some config files we need
 
+amalgamated_dir="amalgamated"
+errors_log_path=${amalgamated_dir}/errors.log
+files_with_errors_path=${amalgamated_dir}/files_with_errors.txt
+
+mkdir -p "${amalgamated_dir}"
+
 # skip files with errors
-rm -f errors.log files_with_errors.txt
-touch errors.log files_with_errors.txt
+rm -f ${errors_log_path} ${files_with_errors_path}
+touch ${errors_log_path} ${files_with_errors_path}
 
 # Do a fixpoint loop until we get to 0 errors.
 # gcc does this in 1-2 iterations, clang takes forever.
 while : ; do
-    prev_num_files_with_errors=$(wc -l < files_with_errors.txt)
-    ./amalgamate.mjs cfs | ("${SHELL}" -euox pipefail || true) &>> errors.log
-    rg '([^:]+):[0-9]+:[0-9]+:' --only-matching --replace '$1' < errors.log > files_with_errors.txt
-    num_files_with_errors=$(wc -l < files_with_errors.txt)
+    prev_num_files_with_errors=$(wc -l < ${files_with_errors_path})
+    ./amalgamate.mjs cfs | ("${SHELL}" -euox pipefail || true) &>> ${errors_log_path}
+    rg '([^:]+):[0-9]+:[0-9]+:' --only-matching --replace '$1' < ${errors_log_path} > ${files_with_errors_path}
+    num_files_with_errors=$(wc -l < ${files_with_errors_path})
     if [[ ${num_files_with_errors} -eq ${prev_num_files_with_errors} ]]; then
         break
     fi
@@ -51,29 +57,39 @@ done
 echo skipped all errors
 ./amalgamate.mjs ${name} | "${SHELL}" -euox pipefail
 
-# exit
-
+# binary_name=${name}_amalgamated
+binary_name=${name}
 c2rust transpile \
     --overwrite-existing \
     --emit-build-files \
-    --binary ${name}_amalgamated \
-    --output-dir ${rust_dir} amalgamated.compile_commands.json \
+    --binary ${binary_name} \
+    --output-dir ${rust_dir} ${amalgamated_dir}/compile_commands.json \
 
-exit
-
-cp {rust,${rust_dir}}/build.rs
+rm -rf ${rust_dir}.old
 mv ${rust_dir} ${rust_dir}.old
 cargo new ${rust_dir}
 (cd "${rust_dir}"
     cargo add libc
     cargo add c2rust-bitfields
-    cp ../rust/build.rs .
+    # cargo add memoffset
+    cargo add f128
+    mv ../${rust_dir}.old/build.rs .
     mv ../${rust_dir}.old/rust-toolchain.toml .
-    mv ../${rust_dir}.old/src/${name}_amalgamated.rs src/main.rs
+    mv ../${rust_dir}.old/src/${binary_name}.rs src/main.rs
+    sed -i 's/channel = "nightly-2022-08-08"/channel = "nightly-2024-04-01"/' rust-toolchain.toml
     sed -i 's/#\[macro_use\]//g' src/main.rs
     sed -i 's/extern crate [^;]*;//g' src/main.rs
-    sed -i "s/use ::${name}_rust_amalgamated::\*;/use c2rust_bitfields::BitfieldStruct;/" src/main.rs
+    lines=(
+        "#![allow(unused_variables)]"
+
+        "use c2rust_bitfields::BitfieldStruct;"
+        # "use memoffset::offset_of;"
+        "use core::mem::offset_of;"
+        "use ::f128::f128;"
+    )
+    sed -i "s/use ::${name}_rust_amalgamated::\*;/${lines[*]}/" src/main.rs
     cargo fmt
+    rm -rf ../${rust_dir}.old
     cargo build
+    cargo fix --allow-dirty --allow-staged
 )
-rm -rf ${rust_dir}.old
