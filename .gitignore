@@ -6,3 +6,5 @@ build
 /amalgamated/
 target/
 compile_commands.json
+inspect/
+polonius_cache/

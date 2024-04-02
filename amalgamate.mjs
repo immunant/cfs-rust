@@ -223,7 +223,6 @@ async function runCommand(cmd, ...extraArgs) {
 
 async function redefinitions({ amalgamated }) {
     const { stderr } = await runCommand(amalgamated.o, "-fdiagnostics-format=json");
-    await fsp.writeFile("errors2.json", stderr);
     const errors = JSON.parse(stderr);
     return errors
         .filter(error => error.message.match(/^rede(fini|clara)tion of /))
