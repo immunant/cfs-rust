@@ -77,7 +77,7 @@ cargo new ${rust_dir}
 (cd "${rust_dir}"
     cargo add libc
     cargo add c2rust-bitfields
-    # cargo add memoffset
+    cargo add memoffset
     cargo add f128
 
     mv ../${rust_dir}.old/build.rs .
@@ -87,7 +87,10 @@ cargo new ${rust_dir}
 
     rm -rf ../${rust_dir}.old
     
-    sed -i 's/channel = "nightly-2022-08-08"/channel = "nightly-2024-04-01"/' rust-toolchain.toml
+    # Don't want to do this until we update the version in c2rust itself,
+    # since we want to run `c2rust analyze` on this.
+    # sed -i 's/channel = "nightly-2022-08-08"/channel = "nightly-2024-04-01"/' rust-toolchain.toml
+
     sed -i 's/#\[macro_use\]//g' src/main.rs
     sed -i 's/extern crate [^;]*;//g' src/main.rs
     
@@ -99,8 +102,8 @@ cargo new ${rust_dir}
         "#![allow(unused_must_use)]"
 
         # "use c2rust_bitfields::BitfieldStruct;" # not used
-        # "use memoffset::offset_of;" # replaced by `core::mem::offset_of`
-        "use core::mem::offset_of;"
+        "use memoffset::offset_of;"
+        # "use core::mem::offset_of;"
         # "use ::f128;"
     )
     sed -i "s/use ::${name}_rust_amalgamated::\*;/${lines[*]}/" src/main.rs
