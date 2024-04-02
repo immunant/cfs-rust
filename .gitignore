@@ -2,3 +2,9 @@ Makefile
 build
 /sample_defs
 .DS_Store
+
+/amalgamated/
+target/
+compile_commands.json
+inspect/
+polonius_cache/

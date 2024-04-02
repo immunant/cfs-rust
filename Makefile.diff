@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index c64668b..b6fcd4e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -101,7 +101,7 @@ endif
+ # The "prep" step requires extra options that are specified via environment variables.
+ # Certain special ones should be passed via cache (-D) options to CMake.
+ # These are only needed for the "prep" target but they are computed globally anyway.
+-PREP_OPTS :=
++PREP_OPTS ?=
+ 
+ ifneq ($(INSTALLPREFIX),)
+ PREP_OPTS += -DCMAKE_INSTALL_PREFIX=$(INSTALLPREFIX)
