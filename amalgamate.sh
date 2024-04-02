@@ -79,21 +79,30 @@ cargo new ${rust_dir}
     cargo add c2rust-bitfields
     # cargo add memoffset
     cargo add f128
+
     mv ../${rust_dir}.old/build.rs .
     mv ../${rust_dir}.old/rust-toolchain.toml .
     mv ../${rust_dir}.old/src/${binary_name}.rs src/main.rs
+    
     sed -i 's/channel = "nightly-2022-08-08"/channel = "nightly-2024-04-01"/' rust-toolchain.toml
     sed -i 's/#\[macro_use\]//g' src/main.rs
     sed -i 's/extern crate [^;]*;//g' src/main.rs
+    
     lines=(
         "#![allow(unused_variables)]"
+        "#![allow(unused_unsafe)]"
+        "#![allow(static_mut_refs)]"
 
-        "use c2rust_bitfields::BitfieldStruct;"
-        # "use memoffset::offset_of;"
+        # "use c2rust_bitfields::BitfieldStruct;" # not used
+        # "use memoffset::offset_of;" # replaced by `core::mem::offset_of`
         "use core::mem::offset_of;"
-        "use ::f128::f128;"
+        # "use ::f128;"
     )
     sed -i "s/use ::${name}_rust_amalgamated::\*;/${lines[*]}/" src/main.rs
+
+    sed -i -E "s/(ArgList\.as_va_list\(\))/core::mem::transmute(\1)/" src/main.rs
+    sed -i -E "s/(ArgListCopy\.as_va_list\(\))/core::mem::transmute(\1)/" src/main.rs
+    
     cargo fmt
     rm -rf ../${rust_dir}.old
     cargo build
