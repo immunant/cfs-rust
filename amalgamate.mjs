@@ -107,9 +107,8 @@ async function amalgamate({ redefinitions }) {
             const flagsWithoutDefines = flags.filter(flag => !flag.startsWith(definePrefix));
 
             const includeLines = () => [
-                ...defines().map(({ name, value }) => `#define ${name} ${value}`),
+                ...defines().map(({ name, value }) => `#undef ${name}\n#define ${name} ${value}`),
                 `#include "${relativePath}"`,
-                ...defines().reverse().map(({ name }) => `#undef ${name}`),
             ];
 
             const namespace = relativePath.replace(/\W/g, '_');
