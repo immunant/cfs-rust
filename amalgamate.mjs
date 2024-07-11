@@ -57,9 +57,16 @@ const skippedFiles = new Set([
 async function amalgamate({ redefinitions }) {
     // console.log(redefinitions);
 
+    let seen = new Set();
+
     const commands = JSON.parse((await fsp.readFile("compile_commands.json")).toString())
-        .map(({ directory, file, output, command, arguments: args }) => {
+        .flatMap(({ directory, file, output, command, arguments: args }) => {
             const relativePath = pathLib.relative(".", file);
+
+            if (seen.has(relativePath)) {
+                return [];
+            }
+            seen.add(relativePath);
 
             args = args ?? command.split(/ +/g);
             command = args.join(" ");
@@ -100,14 +107,13 @@ async function amalgamate({ redefinitions }) {
             const flagsWithoutDefines = flags.filter(flag => !flag.startsWith(definePrefix));
 
             const includeLines = () => [
-                ...defines().map(({ name, value }) => `#define ${name} ${value}`),
+                ...defines().map(({ name, value }) => `#undef ${name}\n#define ${name} ${value}`),
                 `#include "${relativePath}"`,
-                ...defines().reverse().map(({ name }) => `#undef ${name}`),
             ];
 
             const namespace = relativePath.replace(/\W/g, '_');
 
-            return {
+            return [{
                 directory,
                 file,
                 relativePath,
@@ -120,7 +126,7 @@ async function amalgamate({ redefinitions }) {
                 flagsWithoutDefines,
                 includeLines,
                 namespace,
-            };
+            }];
         })
         // Exclude unit tests as that compiles things twice, leading to redefinition errors.
         .filter(e => !e.defines().find(define => define.name === "_UNIT_TEST_"))

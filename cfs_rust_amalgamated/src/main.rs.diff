@@ -26,7 +26,7 @@ index 464f673..d111cd0 100644
      }
 -    Alignment = &mut (*(0 as *mut C2RustUnnamed_25)).Align as *mut CFE_ES_PoolAlign_t as cpuaddr;
 +    Alignment = core::mem::align_of::<CFE_ES_PoolAlign_t>() as _;
-     if Alignment < 4 as libc::c_int as libc::c_ulong {
+     if Alignment < 4 as libc::c_int as size_t {
          Alignment = 4 as libc::c_int as size_t;
      }
 @@ -50800,10 +50800,9 @@ pub unsafe extern "C" fn CFE_PSP_ExceptionSigHandler(
