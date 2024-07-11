@@ -75,10 +75,21 @@ rm -rf ${rust_dir}.old
 mv ${rust_dir} ${rust_dir}.old
 cargo new ${rust_dir}
 (cd "${rust_dir}"
-    cargo add libc
     cargo add c2rust-bitfields
-    cargo add memoffset
-    cargo add f128
+
+    # Pin external dependencies so upstream updates don't break our build
+    cargo add autocfg@=1.2.0
+    cargo add cc@=1.0.90
+    cargo add f128@=0.2.9
+    cargo add f128_input@=0.2.1
+    cargo add f128_internal@=0.2.2
+    cargo add libc@=0.2.153
+    cargo add memoffset@=0.9.1
+    cargo add num-traits@=0.2.18
+    cargo add proc-macro2@=1.0.79
+    cargo add quote@=1.0.35
+    cargo add syn@=1.0.109
+    cargo add unicode-ident@=1.0.12
 
     # mv ../${rust_dir}.old/build.rs . # Don't need it.
     mv ../${rust_dir}.old/rust-toolchain.toml .

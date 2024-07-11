@@ -38,10 +38,19 @@ checksum = "8cd6604a82acf3039f1144f54b8eb34e91ffba622051189e71b781822d5ee1f5"
 name = "cfs_rust_amalgamated"
 version = "0.1.0"
 dependencies = [
+ "autocfg",
  "c2rust-bitfields",
+ "cc",
  "f128",
+ "f128_input",
+ "f128_internal",
  "libc",
  "memoffset",
+ "num-traits",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "unicode-ident",
 ]
 
 [[package]]
